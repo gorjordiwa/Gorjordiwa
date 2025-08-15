@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mini Shop เด็กน้อย</title>
+<style>
+    body {
+        font-family: "Tahoma", sans-serif;
+        margin: 0;
+        background: #fff5f8;
+    }
+    header {
+        background: #ff66a3;
+        color: white;
+        padding: 15px;
+        text-align: center;
+        font-size: 1.5em;
+        font-weight: bold;
+    }
+    .container {
+        max-width: 900px;
+        margin: auto;
+        padding: 20px;
+    }
+    input, button {
+        padding: 10px;
+        margin: 5px 0;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        width: 100%;
+    }
+    button {
+        background: #ff80b3;
+        color: white;
+        cursor: pointer;
+        border: none;
+    }
+    button:hover {
+        background: #e65c99;
+    }
+    .product-list, .cart-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+    }
+    .product, .cart-item {
+        background: white;
+        padding: 10px;
+        border-radius: 10px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+    img {
+        max-width: 100%;
+        border-radius: 8px;
+    }
+    .total {
+        font-size: 1.2em;
+        font-weight: bold;
+        margin-top: 10px;
+        color: #ff3399;
+    }
+</style>
+</head>
+<body>
+
+<header>🛒 Mini Shop เด็กน้อย</header>
+
+<div class="container">
+    <h3>เพิ่มสินค้า</h3>
+    <input type="text" id="productName" placeholder="ชื่อสินค้า">
+    <input type="number" id="productPrice" placeholder="ราคา (บาท)">
+    <input type="file" id="productImage" accept="image/*">
+    <button onclick="addProduct()">เพิ่มสินค้า</button>
+
+    <h3>รายการสินค้า</h3>
+    <div class="product-list" id="productList"></div>
+
+    <h3>ตะกร้าสินค้า</h3>
+    <div class="cart-list" id="cartList"></div>
+    <div class="total" id="cartTotal">ราคารวม: 0 บาท</div>
+</div>
+
+<script>
+    let products = JSON.parse(localStorage.getItem('products')) || [];
+    let cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+    function saveData() {
+        localStorage.setItem('products', JSON.stringify(products));
+        localStorage.setItem('cart', JSON.stringify(cart));
+    }
+
+    function addProduct() {
+        let name = document.getElementById('productName').value.trim();
+        let price = parseFloat(document.getElementById('productPrice').value);
+        let imageFile = document.getElementById('productImage').files[0];
+
+        if (!name || isNaN(price) || price <= 0 || !imageFile) {
+            alert('กรุณากรอกข้อมูลและเลือกรูปภาพ');
+            return;
+        }
+
+        let reader = new FileReader();
+        reader.onload = function(e) {
+            products.push({ name, price, image: e.target.result });
+            saveData();
+            displayProducts();
+        }
+        reader.readAsDataURL(imageFile);
+
+        document.getElementById('productName').value = '';
+        document.getElementById('productPrice').value = '';
+        document.getElementById('productImage').value = '';
+    }
+
+    function displayProducts() {
+        let productList = document.getElementById('productList');
+        productList.innerHTML = '';
+        products.forEach((p, i) => {
+            productList.innerHTML += `
+                <div class="product">
+                    <img src="${p.image}" alt="${p.name}">
+                    <h4>${p.name}</h4>
+                    <p>${p.price.toFixed(2)} บาท</p>
+                    <button onclick="addToCart(${i})">เพิ่มลงตะกร้า</button>
+                </div>
+            `;
+        });
+    }
+
+    function addToCart(index) {
+        cart.push(products[index]);
+        saveData();
+        displayCart();
+    }
+
+    function displayCart() {
+        let cartList = document.getElementById('cartList');
+        cartList.innerHTML = '';
+        let total = 0;
+        cart.forEach((c, i) => {
+            total += c.price;
+            cartList.innerHTML += `
+                <div class="cart-item">
+                    <img src="${c.image}" alt="${c.name}">
+                    <h4>${c.name}</h4>
+                    <p>${c.price.toFixed(2)} บาท</p>
+                    <button onclick="removeFromCart(${i})">ลบ</button>
+                </div>
+            `;
+        });
+        document.getElementById('cartTotal').innerText = `ราคารวม: ${total.toFixed(2)} บาท`;
+    }
+
+    function removeFromCart(index) {
+        cart.splice(index, 1);
+        saveData();
+        displayCart();
+    }
+
+    displayProducts();
+    displayCart();
+</script>
+
+</body>
+</html>
